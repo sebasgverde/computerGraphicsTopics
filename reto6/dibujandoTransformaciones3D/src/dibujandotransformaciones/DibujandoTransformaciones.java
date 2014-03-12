@@ -48,8 +48,8 @@ public class DibujandoTransformaciones extends JPanel {
       puntosPintados = new ArrayList<Vector3D>();
       formas = new ArrayList<Forma>();
       distanciaPerspectiva = 50;
-      n = new Vector3D(-50,0, 0, 1);
-      u = new Vector3D(0, 1, 0, 1);
+      n = new Vector3D(0,50, 0, 1);
+      u = new Vector3D(1, 0, 0, 1);
       
       mat = new Matriz3(0,0,0,0,0,0,0,0,0);
       
@@ -302,8 +302,8 @@ banderaGlobal = false;
               1);
       
       u = new Vector3D(Double.parseDouble(up[0]), 
-              Double.parseDouble(up[0]), 
-              Double.parseDouble(up[0]), 
+              Double.parseDouble(up[1]), 
+              Double.parseDouble(up[2]), 
               1);    
       
       repaint();
