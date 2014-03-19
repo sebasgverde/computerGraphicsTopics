@@ -48,8 +48,8 @@ public class DibujandoTransformaciones extends JPanel {
       puntosPintados = new ArrayList<Vector3D>();
       formas = new ArrayList<Forma>();
       distanciaPerspectiva = 50;
-      n = new Vector3D(0,50, 0, 1);
-      u = new Vector3D(1, 0, 0, 1);
+      n = new Vector3D(0, 0, 50, 1);
+      u = new Vector3D(0, 1, 0, 1);
       
       mat = new Matriz3(0,0,0,0,0,0,0,0,0);
       
@@ -318,7 +318,7 @@ public void cambiarCamara(ArrayList<Vector3D> puntos)
       
       for(int i = 0; i < puntosPintados.size();i++)
       {
-                  cam.aString();
+        cam.aString();
         Matriz3 cam2 = cam.mulMatMat3(mat.translate((int)puntos.get(i).x,(int)puntos.get(i).y, (int)puntos.get(i).z));
         cam2.aString();
         puntosPintados.set(i,cam2.multVector(puntos.get(i))); 
