@@ -10,15 +10,12 @@ package bezier;
  *
  * @author sebastian
  */
-/**
- * Bezier
- * Este programa demuestra la construcciónd de curvas en 2D utilizando el
- * algoritmo de Bézier
-*/
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -26,110 +23,62 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import paqueteMatematico.Vector2D;
 
 public class Bezier extends JPanel {
-    int n = 0;              // hay n+1 numeros de control
-    Punto [] puntos;
-    int [] coeficientes;     // hay k+1 coeficientes
-    boolean DEBUG = false;
+    int numeroPuntos = 0;    
+    Vector2D [] puntos;
+    int [] coeficientes;  
     
     Graphics2D g2d;
     int w;
     int h;
     
-    /**
-     * Constructor
-     * Se leen los puntos de control de un archivo llamado puntos.txt
-     * Primero se lee el grado de la curva (n)
-     * Luego se leen n+1 puntos de control como pares de números
-     * primero la x de cada punto de control y luego la y.
-     * 
-     * Ejemplo de un archivo con puntos de control:
-     *  3
-     *  100,0 100,0
-     *  200,0 300,0
-     *  300,0 -100,0
-     * 400,0 100,0
-     * 
-     */
     Bezier() {
-        //n = myN;
         Scanner sc;
         try {
-            sc = new Scanner(new File("puntos.txt"));
-            n = sc.nextInt();
-            coeficientes = new int[n + 1];
-            puntos = new Punto[n + 1];
-            for (int k = 0; k <= n; k++) {
-                coeficientes[k] = calcularC(n, k);
-                if (DEBUG) {
-                    System.out.println(coeficientes[k]);
-                }
+            sc = new Scanner(new File("especificacion.txt"));
+            
+            numeroPuntos = Integer.parseInt(sc.nextLine()) - 1;
+            
+            coeficientes = new int[numeroPuntos + 1];
+            puntos = new Vector2D[numeroPuntos + 1];
+            
+            for (int k = 0; k <= numeroPuntos; k++) {
+                coeficientes[k] = calcC(numeroPuntos, k);
             }
-            for (int i = 0; i <= n; i++) {
-                double x = sc.nextDouble();
-                double y = sc.nextDouble();
-                puntos[i] = new Punto(x, y);
-                if(DEBUG) System.out.println(puntos[i]);
+            for (int i = 0; i <= numeroPuntos; i++) {
+                String [] punt = sc.nextLine().split(" ");
+                double x = Double.parseDouble(punt[0]);
+                double y = Double.parseDouble(punt[1]);
+                puntos[i] = new Vector2D(x, y,1);
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Bezier.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    /**
-     * Calcula el valor del punto sobre la curva, dado el valor del parámetro (u)
-     * @param u Valor del parámetro: 0 es el comienzo y 1 es el final.
-     * @return 
-     */
-    Punto p(double u) {
-        Punto acum = new Punto(0d, 0d);
-        for(int k = 0; k <= n; k++) {
-            Punto pn = puntos[k].multiplicar(bez(k, u));
-            if(DEBUG) System.out.println("bez " + bez(k, u) );
-            acum = acum.sumar(pn);
+    Vector2D p(double u) {
+        Vector2D acumulador = new Vector2D(0, 0,1);
+        for(int k = 0; k <= numeroPuntos; k++) {
+            Vector2D punto = puntos[k].multiplicar(bezCoef(k, u));
+            acumulador = acumulador.sumar(punto);
         }
-        if(DEBUG) System.out.println("acum" + acum);
-        return acum;
+        return acumulador;
     }
     
-    /**
-     * Cálculo de los coeficientes del binomio
-     * @param n grado de la curva
-     * @param k número del punto de control
-     * @return valor del coeficiente del binomio
-     */
-    final int calcularC(int n, int k) {
-        return fact(n)/(fact(k)*fact(n-k));
+
+    int calcC(int n, int k) {
+        return factorial(n)/(factorial(k)*factorial(n-k));
     }
     
-    double bez(int k, double u) {
-        double d = coeficientes[k] * 
-                exponente(u, k) * 
-                exponente((1-u), (n-k));
+    double bezCoef(int k, double u) {
+        double d = coeficientes[k] * Math.pow(u, k) * Math.pow((1-u), (numeroPuntos-k));
         return d;
     }
     
-    /**
-     * Eleva el número base a la potencia exp
-     * @param base base
-     * @param exp exponente
-     * @return base ** exp
-     */
-    double exponente(double base, int exp){
-        double acum = 1d;
-        for (int i = 0; i < exp; i++) {
-            acum *= base;
-        }
-        return acum;
-    }
     
-    /**
-     * Calcula el factorial de n
-     * @param n valor cuyo factorial de va a calcular
-     * @return n!
-     */
-    int fact(int n) {
+    int factorial(int n) {
         int acum = 1;
         for(int i = 1; i <= n; i++) {
             acum = acum * i;
@@ -137,80 +86,43 @@ public class Bezier extends JPanel {
         return acum;
     }
     
-    /**
-     * Se dibuja la curva de control como una serie de rectas.
-     * @param steps número de rectas que se van a utilizar para aproximar
-     *   la curva
-     * @param g2d 
-     */
-    public void dibujar(int steps, Graphics2D g2d) {
-        g2d.setColor(Color.red);
-        Punto puntoAnterior = p(0);
-        for(double u = 1/(double)steps; u <= 1; u = u + 1/(double)steps ) {
-            Punto punto = p(u);
-            g2d.drawLine((int)puntoAnterior.x, (int)puntoAnterior.y,
-                    (int)punto.x, (int)punto.y);
-            System.out.println(p(u));
-            puntoAnterior = punto;
-        }
-        g2d.drawLine((int)puntoAnterior.x, (int)puntoAnterior.y,
-                    (int)p(1).x, (int)p(1).y); 
-        System.out.println(p(1));
-    }
-    
-        @Override
-        /**
-         * Dibjar la curva
-         */
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         g2d = (Graphics2D) g;
-        dibujar(100, g2d);
+        int steps = 100;
+        
+      Dimension size = getSize();
+      Insets insets = getInsets();
+
+      w =  (size.width - insets.left - insets.right);//496
+      h =  size.height - insets.top - insets.bottom;//474
+      
+      g2d.drawLine(w/2, 0, w/2, h);
+      g2d.drawLine(w,h/2,0, h/2);
+        
+        g2d.setColor(Color.GREEN);
+        
+        Vector2D puntoAnterior = p(0);
+        
+        for(double u = 1/(double)steps; u <= 1; u = u + 1/(double)steps ) {
+            Vector2D punto = p(u);
+            g2d.drawLine(puntoAnterior.mapearX(w), puntoAnterior.mapearY(h),
+                    punto.mapearX(w), punto.mapearY(h));
+            puntoAnterior = punto;
+        }
+        g2d.drawLine((int)puntoAnterior.mapearX(w), (int)puntoAnterior.mapearY(h),
+                    (int)p(1).mapearX(w), (int)p(1).mapearY(h));      
     }
 
     
-        /**
-         * Programa principal
-         * @param args 
-         */
     public static void main(String [] args) {
         JFrame frame = new JFrame("Bezier");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Bezier b = new Bezier();
         frame.add(b);
-        frame.setSize(640, 480);
+        frame.setSize(700, 600);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        
-    }
-    
-    /**
-     * Clase interna para encapsular los valores X e Y del punto
-     */
-    private class Punto {
-        public double x;
-        public double y;
-        
-        public Punto(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-        
-        Punto multiplicar(double escalar) {
-            Punto p = new Punto(this.x * escalar, this.y * escalar);
-            return p;
-        }
-        
-        Punto sumar(Punto p1) {
-            Punto p = new Punto(this.x + p1.x, this.y + p1.y);
-            return p;
-        }
-        
-        @Override
-        public String toString() {
-            return "<" + x + "," + y + ">";
-        }
-    }
-    
+        frame.setVisible(true);      
+    }       
 }
